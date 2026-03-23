@@ -1,17 +1,19 @@
+🚀 Log de Atualizações & Setup ELK
+📅 20/03 - Release Notes
+Status: Versão estável ✅
 
-----
-20/03
+Infra: Rodando via Docker Compose 🐳
 
-Versão estavel, rodando em Docker Compose.
+Versão da Stack: v8.15.0 ⚡
 
-Após subir o serviço do elk, executar os comandos abaixo para criar a segmentação dos ambientes
+🛠️ Configuração de Segmentação de Ambientes
+Após subir o serviço do ELK, execute os comandos abaixo para garantir a segmentação correta.
 
-Lifecycle por serviço gerado, mas geramos um que abrange tudo, rotacionando todo dia e com retenção de 7D
+[!TIP]
+Lifecycle Management: Criamos um fluxo que abrange tudo, com rotação diária e retenção de 7 dias (7D). Prático e eficiente! 🔄
 
-v8.15.0
-
-### 1. Regra para os Traces (Transações das rotas):
-```bash
+🛣️ 1. Regra para os Traces (Transações das rotas)
+Bash
 PUT _ingest/pipeline/traces-apm@custom
 {
   "processors": [
@@ -52,10 +54,8 @@ PUT _ingest/pipeline/traces-apm@custom
     }
   ]
 }
-```
-
-### 2. Regra para as Métricas (como esse log que você me mandou):
-```bash
+📊 2. Regra para as Métricas
+Bash
 PUT _ingest/pipeline/metrics-apm.app@custom
 {
   "processors": [
@@ -94,10 +94,8 @@ PUT _ingest/pipeline/metrics-apm.app@custom
     }
   ]
 }
-```
-
-### 3. Regra para os Logs de Erro (sua rota /error):
-```bash
+⚠️ 3. Regra para os Logs de Erro
+Bash
 PUT _ingest/pipeline/logs-apm.error@custom
 {
   "processors": [
@@ -136,15 +134,15 @@ PUT _ingest/pipeline/logs-apm.error@custom
     }
   ]
 }
-```
-### 4. Para deixar o seu ambiente 100% automatizado no Ubuntu 24.04 com Docker, a estratégia correta não é criar um Lifecycle (ILM) por serviço, mas sim usar Component Templates e Index Templates que se aplicam dinamicamente a qualquer novo serviço que apareça.
+🤖 4. Automação Total (Ubuntu 24.04 + Docker)
+Para um ambiente 100% automatizado, não precisamos criar um ILM por serviço. A jogada mestre aqui é usar Component Templates e Index Templates dinâmicos! 🪄
 
-#### No Elastic 8.15, o segredo é: O Template dita a regra, o Pipeline faz o roteamento.
+O segredo no Elastic 8.15: O Template dita a regra, o Pipeline faz o roteamento. 🦾
 
-### 4.1 Criar uma Política de Lifecycle (ILM) Única
-#### Em vez de uma por serviço, crie uma política padrão (ex: apm-7-days-delete) que define que os dados devem ser apagados após 7 dias.
+⏳ 4.1 Criar uma Política de Lifecycle (ILM) Única
+Crie uma política padrão (ex: apm-7-days-delete) para limpeza automática após uma semana.
 
-```bash
+Bash
 PUT _ilm/policy/apm-lifecycle-policy
 {
   "policy": {
@@ -166,12 +164,10 @@ PUT _ilm/policy/apm-lifecycle-policy
     }
   }
 }
-```
+📦 4.2 Criar um Component Template para o Lifecycle
+Isso "empacota" a configuração para ser injetada em qualquer índice novo.
 
-### 4.2 Criar um Component Template para o Lifecycle
-#### Isso "empacota" a configuração do ILM para que ela possa ser injetada em qualquer índice novo.
-
-```bash
+Bash
 PUT _component_template/apm-custom-settings
 {
   "template": {
@@ -185,12 +181,10 @@ PUT _component_template/apm-custom-settings
     "description": "Configuracoes base para APM: 1 shard e 0 replicas"
   }
 }
-```
+✨ 4.3 O "Pulo do Gato": Index Template Global
+Sempre que um rastro (trace) chegar para qualquer namespace (gw, auth, orders, etc), o Elasticsearch aplicará as regras automaticamente.
 
-### 4.3 Criar o Index Template Global (A "Mágica" da Automação)
-#### Este template diz ao Elasticsearch: "Sempre que um rastro (trace) chegar para qualquer namespace (gw, auth, orders, etc), aplique as configurações do apm-custom-settings".
-
-```bash
+Bash
 PUT _index_template/apm-traces-automation
 {
   "index_patterns": ["traces-apm-*"],
@@ -201,5 +195,5 @@ PUT _index_template/apm-traces-automation
     "description": "Automacao total de Lifecycle para todos os servicos de APM Traces"
   }
 }
-```
-#### Repita o comando acima mudando apenas o **index_patterns** para **metrics-apm-*** e **logs-apm-*** se quiser automatizar tudo.
+[!NOTE]
+Para automatizar tudo, repita o passo 4.3 alterando o index_patterns para metrics-apm-* e logs-apm-*. 🏁
