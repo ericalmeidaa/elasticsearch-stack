@@ -2,7 +2,7 @@
 
 Repositório dedicado à configuração e automação da stack Elasticsearch,  Kibana e APM-Server via Docker.
 
-Pensado para dividir os projetos dos DEV no **Index Management** para assim validar quanto de espaço cada projeto está ocupando.
+Segmenta automaticamente os projetos dos DEV no **Index Management**.
 
 Baixar o arquivo **docker-compose.yml** no servidor e executar !!
 
@@ -17,11 +17,11 @@ Baixar o arquivo **docker-compose.yml** no servidor e executar !!
 
 🛠️ Configuração de Segmentação de Ambientes
 
-Após subir o serviço do ELK, execute as regras de Ingest Pipeline abaixo. Elas garantem que os dados de diferentes serviços sejam segmentados corretamente por namespace ou service.name.
+Após subir o serviço do ELK, execute as regras de Ingest Pipeline abaixo. Elas garantem que os dados de diferentes serviços sejam segmentados corretamente por **namespace** ou **service.name**.
 
-💡 Dica de Lifecycle Management: Criado um fluxo que abrange tudo, com rotação diária e retenção de 7 dias (7D). Prático e eficiente! 🔄
+💡 Criado um fluxo que abrange tudo, com rotação diária e retenção de 7 dias (7D). Prático e eficiente! 🔄
 
-Executar os comandos no Kibana Dev Tools.
+**Executar os comandos no Kibana Dev Tools.**
 
 ---
 
@@ -159,10 +159,10 @@ PUT _ingest/pipeline/logs-apm.error@custom
 ```
 ---
 
-### 🤖 4. Rotação dos Projetos Automático
-Para um ambiente 100% automatizado, não precisamos criar um ILM por serviço. A jogada mestre aqui é usar Component Templates e Index Templates dinâmicos! 🪄
+### 🤖 4. Automatizar a Rotação dos Projetos
+Para um ambiente 100% automatizado, não é necessário criar um ILM por serviço. Vamos usar o Component Templates e Index Templates dinâmicos! 🪄
 
-O segredo no Elastic 8.15: O Template dita a regra, o Pipeline faz o roteamento. 🦾
+No Elastic 8.15 o Template dita a regra, o Pipeline faz o roteamento. 🦾
 
 #### ⏳ 4.1 Criar uma Política de Lifecycle (ILM) Única
 Crie uma política padrão (ex: apm-7-days-delete) para limpeza automática após uma semana.
