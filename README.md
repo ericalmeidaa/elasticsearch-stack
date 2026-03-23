@@ -17,7 +17,7 @@ Após subir o serviço do ELK, execute os comandos abaixo para garantir a segmen
 
 ### 🛣️ 1. Regra para os Traces (Transações das rotas)
 
-```Bash
+```yaml
 PUT _ingest/pipeline/traces-apm@custom
 {
   "processors": [
@@ -63,7 +63,7 @@ PUT _ingest/pipeline/traces-apm@custom
 
 ### 📊 2. Regra para as Métricas
 
-```Bash
+```yaml
 PUT _ingest/pipeline/metrics-apm.app@custom
 {
   "processors": [
@@ -107,7 +107,7 @@ PUT _ingest/pipeline/metrics-apm.app@custom
 
 ### ⚠️ 3. Regra para os Logs de Erro
 
-```Bash
+```yaml
 PUT _ingest/pipeline/logs-apm.error@custom
 {
   "processors": [
@@ -157,7 +157,7 @@ O segredo no Elastic 8.15: O Template dita a regra, o Pipeline faz o roteamento.
 #### ⏳ 4.1 Criar uma Política de Lifecycle (ILM) Única
 Crie uma política padrão (ex: apm-7-days-delete) para limpeza automática após uma semana.
 
-```Bash
+```yaml
 PUT _ilm/policy/apm-lifecycle-policy
 {
   "policy": {
@@ -184,7 +184,7 @@ PUT _ilm/policy/apm-lifecycle-policy
 #### 📦 4.2 Criar um Component Template para o Lifecycle
 Isso "empacota" a configuração para ser injetada em qualquer índice novo.
 
-```Bash
+```yaml
 PUT _component_template/apm-custom-settings
 {
   "template": {
@@ -203,7 +203,7 @@ PUT _component_template/apm-custom-settings
 #### ✨ 4.3 O "Pulo do Gato": Index Template Global
 Sempre que um rastro (trace) chegar para qualquer namespace (gw, auth, orders, etc), o Elasticsearch aplicará as regras automaticamente.
 
-```Bash
+```yaml
 PUT _index_template/apm-traces-automation
 {
   "index_patterns": ["traces-apm-*"],
