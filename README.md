@@ -2,7 +2,7 @@
 ----
 20/03
 
-Versão estavel e online no servidor dev-elasticsearch3 (10.0.199.39), rodando em Docker Compose.
+Versão estavel, rodando em Docker Compose.
 
 Após subir o serviço do elk, executar os comandos abaixo para criar a segmentação dos ambientes
 
