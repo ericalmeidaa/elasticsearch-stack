@@ -1,0 +1,97 @@
+services:
+  # Container temporário para configurar as credenciais internas da stack
+  setup:
+    image: curlimages/curl:7.85.0
+    container_name: setup-passwords
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic-net
+    command: >
+      sh -c "
+        echo 'Aguardando o Elasticsearch iniciar...';
+        # Loop de verificação: aguarda o serviço responder com a nova senha master
+        until curl -s -u elastic:Changeme http://elasticsearch:9200 | grep -q 'cluster_uuid'; do
+          sleep 5;
+        done;
+        echo 'Elasticsearch pronto! Configurando a senha do usuario interno kibana_system...';
+        # Define a senha do usuário do sistema que o Kibana usa para se comunicar com o ES
+        curl -s -X POST -u elastic:Changeme -H 'Content-Type: application/json' http://elasticsearch:9200/_security/user/kibana_system/_password -d '{\"password\":\"Changeme\"}';
+        echo '\nSenha configurada com sucesso!';
+      "
+
+# Instalacao e configuracao do elastic
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g" # Memória otimizada para suportar os data streams do APM
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false # SSL desativado para facilitar a comunicação em DEV
+      - xpack.security.transport.ssl.enabled=false
+      - ELASTIC_PASSWORD=Changeme # Senha mestre (superuser) definida aqui
+      # Configurações de acesso anônimo para simplificar testes em ambiente de Desenvolvimento
+      - xpack.security.authc.anonymous.username=anon
+      - xpack.security.authc.anonymous.roles=superuser
+      - xpack.security.authc.anonymous.authz_exception=true
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - elastic-net
+
+# Instalacao e configuracao do kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: kibana
+    restart: on-failure
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=kibana_system # Usuário de sistema (não use 'elastic' aqui por boa prática)
+      - ELASTICSEARCH_PASSWORD=Changeme
+      # Permite login anônimo no Kibana se necessário
+      - xpack.security.authc.providers.anonymous.anonymous1.order=0
+      - xpack.security.authc.providers.anonymous.anonymous1.credentials=elasticsearch_anonymous_user
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elastic-net
+
+# Instalacao e configuracao do apm-server
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:8.15.0
+    container_name: apm-server
+    restart: on-failure
+    depends_on:
+      - elasticsearch
+      - kibana
+    ports:
+      - "8200:8200"
+    environment:
+      - output.elasticsearch.hosts=["http://elasticsearch:9200"]
+      - output.elasticsearch.username=elastic
+      - output.elasticsearch.password=Changeme
+      - apm-server.data_streams.enabled=true
+      - setup.template.enabled=true
+      - setup.ilm.enabled=true
+      - apm-server.rum.enabled=true # Real User Monitoring habilitado
+    command: >
+     apm-server -e
+     -E apm-server.host=0.0.0.0:8200
+     -E apm-server.auth.anonymous.enabled=true
+     -E setup.kibana.host=kibana:5601
+     --strict.perms=false
+    networks:
+      - elastic-net
+
+volumes:
+  es_data:
+    driver: local
+
+networks:
+  elastic-net:
+    driver: bridge
