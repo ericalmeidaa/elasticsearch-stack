@@ -1,17 +1,27 @@
 # 🚀 Setup ELK Stack
 
- 📅 20/03 - Release Notes
+Repositório dedicado à configuração e automação da stack Elasticsearch,  Kibana e APM-Server via Docker.
 
-Status: Versão estável ✅
+Pensado para dividir os projetos dos DEV no **Index Management** para assim validar quanto de espaço cada projeto está ocupando.
 
-Infra: Rodando via Docker Compose 🐳
+Baixar o arquivo **docker-compose.yml** no servidor e executar !!
 
-Versão da Stack: v8.15.0 ⚡
+---
+ 🚀 Log de Atualizações & Status
+
+- Última Atualização: 20/03 ✅
+- Ubuntu: 24.04 Lts
+- Docker Compose: v29.0 🐳
+- Versão da Stack: v8.15.0 ⚡
+---
 
 🛠️ Configuração de Segmentação de Ambientes
-Após subir o serviço do ELK, execute os comandos abaixo para garantir a segmentação correta.
 
-💡 Dica de Lifecycle Management: Criamos um fluxo que abrange tudo, com rotação diária e retenção de 7 dias (7D). Prático e eficiente! 🔄
+Após subir o serviço do ELK, execute as regras de Ingest Pipeline abaixo. Elas garantem que os dados de diferentes serviços sejam segmentados corretamente por namespace ou service.name.
+
+💡 Dica de Lifecycle Management: Criado um fluxo que abrange tudo, com rotação diária e retenção de 7 dias (7D). Prático e eficiente! 🔄
+
+Executar os comandos no Kibana Dev Tools.
 
 ---
 
@@ -149,7 +159,7 @@ PUT _ingest/pipeline/logs-apm.error@custom
 ```
 ---
 
-### 🤖 4. Automação Total (Ubuntu 24.04 + Docker)
+### 🤖 4. Rotação dos Projetos Automático
 Para um ambiente 100% automatizado, não precisamos criar um ILM por serviço. A jogada mestre aqui é usar Component Templates e Index Templates dinâmicos! 🪄
 
 O segredo no Elastic 8.15: O Template dita a regra, o Pipeline faz o roteamento. 🦾
@@ -216,4 +226,4 @@ PUT _index_template/apm-traces-automation
 }
 ```
 
-📝 Nota: Para automatizar tudo, repita o passo 4.3 alterando o index_patterns para metrics-apm-* e logs-apm-*. 🏁
+📝 Nota: Para automatizar tudo, repita o passo 4.3 alterando o **index_patterns** para **metrics-apm-\*** e **logs-apm-\***. 🏁
