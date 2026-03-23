@@ -1,5 +1,7 @@
 🚀 Log de Atualizações & Setup ELK
+
 📅 20/03 - Release Notes
+
 Status: Versão estável ✅
 
 Infra: Rodando via Docker Compose 🐳
@@ -9,11 +11,11 @@ Versão da Stack: v8.15.0 ⚡
 🛠️ Configuração de Segmentação de Ambientes
 Após subir o serviço do ELK, execute os comandos abaixo para garantir a segmentação correta.
 
-[!TIP]
-Lifecycle Management: Criamos um fluxo que abrange tudo, com rotação diária e retenção de 7 dias (7D). Prático e eficiente! 🔄
+💡 Dica de Lifecycle Management: Criamos um fluxo que abrange tudo, com rotação diária e retenção de 7 dias (7D). Prático e eficiente! 🔄
 
 🛣️ 1. Regra para os Traces (Transações das rotas)
-Bash
+
+```Bash
 PUT _ingest/pipeline/traces-apm@custom
 {
   "processors": [
@@ -54,8 +56,11 @@ PUT _ingest/pipeline/traces-apm@custom
     }
   ]
 }
+```
+
 📊 2. Regra para as Métricas
-Bash
+
+```Bash
 PUT _ingest/pipeline/metrics-apm.app@custom
 {
   "processors": [
@@ -94,8 +99,11 @@ PUT _ingest/pipeline/metrics-apm.app@custom
     }
   ]
 }
+```
+
 ⚠️ 3. Regra para os Logs de Erro
-Bash
+
+```Bash
 PUT _ingest/pipeline/logs-apm.error@custom
 {
   "processors": [
@@ -134,6 +142,8 @@ PUT _ingest/pipeline/logs-apm.error@custom
     }
   ]
 }
+```
+
 🤖 4. Automação Total (Ubuntu 24.04 + Docker)
 Para um ambiente 100% automatizado, não precisamos criar um ILM por serviço. A jogada mestre aqui é usar Component Templates e Index Templates dinâmicos! 🪄
 
@@ -142,7 +152,7 @@ O segredo no Elastic 8.15: O Template dita a regra, o Pipeline faz o roteamento.
 ⏳ 4.1 Criar uma Política de Lifecycle (ILM) Única
 Crie uma política padrão (ex: apm-7-days-delete) para limpeza automática após uma semana.
 
-Bash
+```Bash
 PUT _ilm/policy/apm-lifecycle-policy
 {
   "policy": {
@@ -164,10 +174,12 @@ PUT _ilm/policy/apm-lifecycle-policy
     }
   }
 }
+```
+
 📦 4.2 Criar um Component Template para o Lifecycle
 Isso "empacota" a configuração para ser injetada em qualquer índice novo.
 
-Bash
+```Bash
 PUT _component_template/apm-custom-settings
 {
   "template": {
@@ -181,10 +193,12 @@ PUT _component_template/apm-custom-settings
     "description": "Configuracoes base para APM: 1 shard e 0 replicas"
   }
 }
+```
+
 ✨ 4.3 O "Pulo do Gato": Index Template Global
 Sempre que um rastro (trace) chegar para qualquer namespace (gw, auth, orders, etc), o Elasticsearch aplicará as regras automaticamente.
 
-Bash
+```Bash
 PUT _index_template/apm-traces-automation
 {
   "index_patterns": ["traces-apm-*"],
@@ -195,5 +209,6 @@ PUT _index_template/apm-traces-automation
     "description": "Automacao total de Lifecycle para todos os servicos de APM Traces"
   }
 }
-[!NOTE]
-Para automatizar tudo, repita o passo 4.3 alterando o index_patterns para metrics-apm-* e logs-apm-*. 🏁
+```
+
+📝 Nota: Para automatizar tudo, repita o passo 4.3 alterando o index_patterns para metrics-apm-* e logs-apm-*. 🏁
