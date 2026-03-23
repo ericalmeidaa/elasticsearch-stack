@@ -252,4 +252,4 @@ PUT _component_template/logs-apm.error@custom
   }
 }
 ```
-### 🏁 Pronto! Agora a stack recebe os dados, o Pipeline faz o roteamento segmentado, os mapeamentos nativos do APM montam as telas no Kibana e os Component Templates cuidam da limpeza de 5 dias. Tudo no piloto automático!
+🏁 Pronto! Agora a stack recebe os dados, o Pipeline faz o roteamento segmentado, os mapeamentos nativos do APM montam as telas no Kibana e os Component Templates cuidam da limpeza de 5 dias. Tudo no piloto automático!
