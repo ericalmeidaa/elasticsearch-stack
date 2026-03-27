@@ -12,8 +12,12 @@ services:
       sh -c "
         echo 'Elasticsearch pronto! Configurando a senha do usuario interno kibana_system...';
         curl -s -X POST -u elastic:Changeme -H 'Content-Type: application/json' http://elasticsearch:9200/_security/user/kibana_system/_password -d '{\"password\":\"Changeme\"}';
-        echo '\nSenha configurada com sucesso!';
-      "
+        echo '\nSenha configurada com sucesso!'; "
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"  # limite do arquivo de log
+        max-file: "3"   # maximo de arquivos antes de rotacionar 
 
   # Instalacao e configuracao do elastic
   elasticsearch:
@@ -42,6 +46,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"  # limite do arquivo de log
+        max-file: "3"   # maximo de arquivos antes de rotacionar
 
   # Instalacao e configuracao do kibana
   kibana:
@@ -64,6 +73,11 @@ services:
         condition: service_healthy
     networks:
       - elastic-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"  # limite do arquivo de log
+        max-file: "3"   # maximo de arquivos antes de rotacionar  
 
   # Instalacao e configuracao do apm-server
   apm-server:
@@ -87,9 +101,18 @@ services:
      -E apm-server.host=0.0.0.0:8200
      -E apm-server.auth.anonymous.enabled=true
      -E setup.kibana.host=kibana:5601
+     -E apm-server.kibana.enabled=true
+     -E apm-server.kibana.host=kibana:5601
+     -E apm-server.kibana.username=elastic
+     -E apm-server.kibana.password=Changeme
      --strict.perms=false
     networks:
       - elastic-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"  # limite do arquivo de log
+        max-file: "5"   # maximo de arquivos antes de rotacionar  
 
 volumes:
   es_data:

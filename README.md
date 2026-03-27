@@ -189,7 +189,6 @@ PUT _ilm/policy/apm-lifecycle-policy
       "hot": {
         "actions": {
           "rollover": {
-            "max_primary_shard_size": "50gb",
             "max_age": "1d"
           }
         }
@@ -208,7 +207,7 @@ PUT _ilm/policy/apm-lifecycle-policy
 #### ✨ 4.2 O "Pulo do Gato": Customizar os Templates Nativos do APM
 O Elastic APM já possui templates base (ex: traces-apm@custom). Nós só precisamos editá-los para incluir nossa política de ILM e definir a quantidade de Shards/Replicas. Assim que os dados forem roteados pelos nossos Ingest Pipelines, eles herdarão essas configurações automaticamente!
 
-#### Para os Traces:
+#### Para os Traces do APM:
 ```yaml
 PUT _component_template/traces-apm@custom
 {
@@ -225,7 +224,7 @@ PUT _component_template/traces-apm@custom
 }
 ```
 
-#### Para as Métricas:
+#### Para as Métricas do APM:
 ```yaml
 PUT _component_template/metrics-apm.app@custom
 {
@@ -239,7 +238,7 @@ PUT _component_template/metrics-apm.app@custom
 }
 ```
 
-#### Para os Logs de Erro:
+#### Para os Logs de Erro do APM:
 ```yaml
 PUT _component_template/logs-apm.error@custom
 {
@@ -252,4 +251,46 @@ PUT _component_template/logs-apm.error@custom
   }
 }
 ```
+
+#### Para os Logs de Erro Geral:
+```yaml
+PUT _component_template/logs@custom
+{
+  "template": {
+    "settings": {
+      "index.lifecycle.name": "apm-lifecycle-policy",
+      "index.number_of_shards": 1,
+      "index.number_of_replicas": 0
+    }
+  },
+  "_meta": {
+    "description": "Aplica ILM de 5 dias e 0 replicas para todos os logs de aplicacao gerados nativamente"
+  }
+}
+```
 🏁 Pronto! Agora a stack recebe os dados, o Pipeline faz o roteamento segmentado, os mapeamentos nativos do APM montam as telas no Kibana e os Component Templates cuidam da limpeza de 5 dias. Tudo no piloto automático!
+
+## Boas Práticas para o Cluster pós instalação
+
+Como esses são índices de métricas internas do sistema, podemos dizer ao Elasticsearch que não queremos réplicas para eles (ou que eles podem ser Green mesmo sem réplica).
+
+Rode este comando no Dev Tools para "esverdear" tudo:
+```yml
+PUT .ds-metrics-apm.*-default-*/_settings
+{
+  "index": {
+    "number_of_replicas": 0
+  }
+}
+```
+---
+
+Para descobrir exatamente o que o "motor" do ILM está fazendo com esse índice neste exato milissegundo (se está aguardando o tempo, se está em processo de rotação ou se deu algum erro), existe um comando de diagnóstico chamado **ILM Explain**.
+
+Vá no seu Kibana > Dev Tools e rode isto:
+
+```yaml
+GET nome_do_indice/_ilm/explain
+
+GET .ds-traces-apm-contextprocessorout-2026.03.26-000001/_ilm/explain
+```
